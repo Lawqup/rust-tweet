@@ -1,0 +1,14 @@
+DROP TABLE users;
+CREATE TABLE users (
+       id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+       username TEXT NOT NULL UNIQUE
+);
+
+DROP TABLE tweets;
+CREATE TABLE tweets (
+       id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+       title TEXT NOT NULL,
+       body TEXT NOT NULL,
+       author_id INTEGER NOT NULL,
+       FOREIGN KEY(author_id) REFERENCES users(id)
+);

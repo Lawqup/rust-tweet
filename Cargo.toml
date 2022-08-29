@@ -1,0 +1,8 @@
+[package]
+name = "rust-tweet"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+diesel = { version = "1.4.4", features = ["sqlite"] }
+rocket = "0.5.0-rc.2"
