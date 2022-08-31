@@ -1,5 +1,6 @@
 [default]
 template_dir = "static"
+port = 8080
 
 [default.databases.sqlite_database]
 url = "db/db.sqlite"

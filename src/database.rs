@@ -1,4 +1,6 @@
-use diesel::{self, prelude::*, sqlite::SqliteConnection};
+use crate::DbConn;
+use diesel::{self, prelude::*};
+use serde::Serialize;
 
 mod schema {
     table! {
@@ -22,9 +24,11 @@ use schema::users;
 use schema::users::dsl::{username as user_username, users as all_users};
 
 use schema::tweets;
+use schema::tweets::dsl::author_id as tweet_author_id;
+use schema::tweets::dsl::id as tweet_id;
 use schema::tweets::dsl::tweets as all_tweets;
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug, Serialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
@@ -36,7 +40,7 @@ pub struct UserNew {
     pub username: String,
 }
 
-#[derive(Queryable)]
+#[derive(Queryable, Debug, Serialize)]
 pub struct Tweet {
     pub id: i32,
     pub title: String,
@@ -54,47 +58,86 @@ pub struct TweetNew {
 
 impl User {
     /// Returns all users in the database.
-    pub fn all(conn: &SqliteConnection) -> Vec<User> {
-        all_users.load::<User>(conn).unwrap()
+    pub async fn all(conn: &DbConn) -> Vec<User> {
+        conn.run(|c| all_users.load::<User>(c).unwrap()).await
     }
 
     /// Inserts a user and returns true of insertion was successful.
-    pub fn insert(user: UserNew, conn: &SqliteConnection) -> bool {
-        let res = diesel::insert_into(users::table)
-            .values(&user)
-            .execute(conn);
+    pub async fn insert(user: UserNew, conn: &DbConn) -> bool {
+        conn.run(move |c| {
+            let res = diesel::insert_into(users::table).values(&user).execute(c);
 
-        match res {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+            match res {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        })
+        .await
     }
 
     /// Returns true if username is available.
-    pub fn username_available(username: String, conn: &SqliteConnection) -> bool {
-        all_users
-            .filter(user_username.eq(username))
-            .load::<User>(conn)
-            .unwrap()
-            .is_empty()
+    pub async fn username_available(username: String, conn: &DbConn) -> bool {
+        conn.run(|c| {
+            all_users
+                .filter(user_username.eq(username))
+                .load::<User>(c)
+                .unwrap()
+                .is_empty()
+        })
+        .await
     }
 }
 
 impl Tweet {
     /// Returns all tweets in the database.
-    pub fn all(conn: &SqliteConnection) -> Vec<Tweet> {
-        all_tweets.load::<Tweet>(conn).unwrap()
+    pub async fn all(conn: &DbConn) -> Vec<Tweet> {
+        conn.run(|c| all_tweets.load::<Tweet>(c).unwrap()).await
+    }
+
+    /// Returns a tweet associated with the id.
+    pub async fn get(id: i32, conn: &DbConn) -> Tweet {
+        conn.run(move |c| {
+            all_tweets
+                .filter(tweet_id.eq(id))
+                .load::<Tweet>(c)
+                .unwrap()
+                .into_iter()
+                .nth(0)
+                .unwrap()
+        })
+        .await
     }
 
     /// Inserts a tweet in the DB and returns true of insertion was successful.
-    pub fn insert(tweet: TweetNew, conn: &SqliteConnection) -> bool {
-        let res = diesel::insert_into(tweets::table)
-            .values(&tweet)
-            .execute(conn);
+    pub async fn insert(tweet: TweetNew, conn: &DbConn) -> bool {
+        conn.run(move |c| {
+            let res = diesel::insert_into(tweets::table).values(&tweet).execute(c);
 
-        match res {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+            match res {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        })
+        .await
+    }
+
+    /// Get the username associated with the author_id if that user exists.
+    pub async fn author_username(author_id: i32, conn: &DbConn) -> Option<String> {
+        joinable!(tweets -> users (author_id));
+        allow_tables_to_appear_in_same_query!(tweets, users);
+
+        conn.run(move |c| {
+            let res: Result<Vec<String>, _> = users::table
+                .inner_join(tweets::table)
+                .select(user_username)
+                .filter(tweet_author_id.eq(author_id))
+                .load::<String>(c);
+
+            match res {
+                Ok(username) => username.into_iter().nth(0),
+                Err(_) => None,
+            }
+        })
+        .await
     }
 }

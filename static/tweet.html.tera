@@ -1,0 +1,24 @@
+{% extends "base" %}
+{% block content %}
+<div class="position-absolute top-50 start-50
+  translate-middle w-50 h-50
+  card"
+  style="background: #1DA1F2">
+  <div class="card-body px-5">
+    <div class="card-title border-bottom border-2
+      d-flex justify-content-between">
+      <h1 class="">
+        {{ tweet.title }}
+      </h1>
+      <div class="d-flex flex-column align-items-end">
+        <a href="/" type="button" class="btn-close" aria-label="Close"></a>
+        <h5 class="card-subheading">{{ author }}</h5>
+      </div>
+    </div>
+    <h4 class="card-text pt-1">{{ tweet.body }}</h4>
+  </div>
+</div>
+{% endblock content %}
+{% block head %}
+<title>{{ tweet.title }}</title>
+{% endblock %}
