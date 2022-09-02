@@ -1,9 +1,6 @@
 {% extends "base" %}
 {% block content %}
-<div class="position-absolute top-50 start-50
-  translate-middle w-50 h-50
-  card"
-  style="background: #1DA1F2">
+<div class="w-50 h-50 card primary">
   <div class="card-body px-5">
     <div class="card-title border-bottom border-2
       d-flex justify-content-between">

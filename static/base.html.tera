@@ -13,10 +13,17 @@
   <body>
     <style>
       body {
-        background-color: #242424;
+        background: #242424;
+      }
+
+      .primary {
+        background: #1DA1F2;
       }
     </style>
-    <div class="container pt-3">
+    {% block nav %}{% endblock nav%}
+    <div class="container-fluid
+      d-flex justify-content-center align-items-center
+      vh-100 pt-2">
       {% block content %}{% endblock content %}
     </div>
     <script

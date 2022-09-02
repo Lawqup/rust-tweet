@@ -34,7 +34,7 @@ pub struct User {
     pub username: String,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Clone, FromForm)]
 #[table_name = "users"]
 pub struct UserNew {
     pub username: String,
@@ -54,6 +54,13 @@ pub struct TweetNew {
     pub title: String,
     pub body: String,
     pub author_id: i32,
+}
+
+impl UserNew {
+    pub async fn login(self, conn: &DbConn) -> User {
+        let _ = User::insert(self.clone(), conn).await;
+        User::get(self.username, conn).await.unwrap()
+    }
 }
 
 impl User {
@@ -76,13 +83,16 @@ impl User {
     }
 
     /// Returns true if username is available.
-    pub async fn username_available(username: String, conn: &DbConn) -> bool {
+    pub async fn get(username: String, conn: &DbConn) -> Option<User> {
         conn.run(|c| {
-            all_users
+            let res = all_users
                 .filter(user_username.eq(username))
-                .load::<User>(c)
-                .unwrap()
-                .is_empty()
+                .get_result::<User>(c);
+
+            match res {
+                Ok(u) => Some(u),
+                Err(_) => None,
+            }
         })
         .await
     }
@@ -109,17 +119,17 @@ impl Tweet {
     }
 
     /// Inserts a tweet in the DB and returns true of insertion was successful.
-    pub async fn insert(tweet: TweetNew, conn: &DbConn) -> bool {
-        conn.run(move |c| {
-            let res = diesel::insert_into(tweets::table).values(&tweet).execute(c);
-
-            match res {
-                Ok(_) => true,
-                Err(_) => false,
-            }
-        })
-        .await
-    }
+    // pub async fn insert(tweet: TweetNew, conn: &DbConn) -> bool {
+    //     conn.run(move |c| {
+    //         let res = diesel::insert_into(tweets::table).values(&tweet).execute(c);
+    //
+    //         match res {
+    //             Ok(_) => true,
+    //             Err(_) => false,
+    //         }
+    //     })
+    //     .await
+    // }
 
     /// Get the username associated with the author_id if that user exists.
     pub async fn author_username(author_id: i32, conn: &DbConn) -> Option<String> {
@@ -127,14 +137,14 @@ impl Tweet {
         allow_tables_to_appear_in_same_query!(tweets, users);
 
         conn.run(move |c| {
-            let res: Result<Vec<String>, _> = users::table
+            let res: Result<String, _> = users::table
                 .inner_join(tweets::table)
                 .select(user_username)
                 .filter(tweet_author_id.eq(author_id))
-                .load::<String>(c);
+                .get_result::<String>(c);
 
             match res {
-                Ok(username) => username.into_iter().nth(0),
+                Ok(username) => Some(username),
                 Err(_) => None,
             }
         })

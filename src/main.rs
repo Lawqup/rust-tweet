@@ -5,12 +5,13 @@ extern crate diesel;
 #[macro_use]
 extern crate rocket_sync_db_pools;
 
+use rocket::form::Form;
 use rocket::fs::{relative, FileServer};
 use rocket::serde::Serialize;
 use rocket_dyn_templates::{context, Template};
 
 mod database;
-use database::Tweet;
+use database::{Tweet, UserNew};
 
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
@@ -26,6 +27,12 @@ impl Context {
             tweets: Tweet::all(conn).await,
         }
     }
+}
+
+#[post("/login", data = "<user>")]
+async fn login(user: Form<UserNew>, conn: DbConn) -> Template {
+    user.into_inner().login(&conn).await;
+    index(conn).await
 }
 
 #[get("/")]
@@ -51,5 +58,5 @@ fn rocket() -> _ {
         .attach(DbConn::fairing())
         .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, tweet])
+        .mount("/", routes![index, tweet, login])
 }

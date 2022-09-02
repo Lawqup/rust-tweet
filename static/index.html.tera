@@ -1,14 +1,29 @@
 {% extends "base" %}
+{% block nav %}
+<nav class="navbar navbar-dark
+	    primary border-bottom border-2">
+
+  <form action="login" method="post" class="px-3">
+    <div class="row">
+      <div class="col-auto">
+        <input class="form-control" type="text"
+               placeholder="Enter a unique name" name="username" required autofocus />
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-danger">Login!</button>
+      </div>
+    </div>
+  </form>
+</nav>
+{% endblock%}
 {% block content %}
 <div
-  class="w-50 h-100 top-0 start-50
-  position-absolute translate-middle-x
-  bg-secondary">
-  <div class="list-group list-group-flush">
+  class="w-50 h-100
+	 bg-secondary">
+  <div class="list-group list-group-flush b-5">
     {% for tweet in tweets %}
     <a href="/tweet/{{ tweet.id }}"
-      class="list-group-item list-group-item-action"
-      style="background: #1DA1F2">
+      class="list-group-item list-group-item-action primary">
       {{ tweet.title }}
     </a>
     {% endfor %}
