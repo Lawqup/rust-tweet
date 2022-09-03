@@ -20,13 +20,14 @@ mod schema {
     }
 }
 
-use schema::users;
-use schema::users::dsl::{username as user_username, users as all_users};
-
 use schema::tweets;
 use schema::tweets::dsl::author_id as tweet_author_id;
 use schema::tweets::dsl::id as tweet_id;
 use schema::tweets::dsl::tweets as all_tweets;
+
+use schema::users;
+use schema::users::dsl::username as user_username;
+use schema::users::dsl::users as all_users;
 
 #[derive(Queryable, Debug, Serialize)]
 pub struct User {
@@ -59,7 +60,7 @@ pub struct TweetNew {
 impl UserNew {
     pub async fn login(self, conn: &DbConn) -> User {
         let _ = User::insert(self.clone(), conn).await;
-        User::get(self.username, conn).await.unwrap()
+        User::get_from_username(self.username, conn).await.unwrap()
     }
 }
 
@@ -72,29 +73,29 @@ impl User {
     /// Inserts a user and returns true of insertion was successful.
     pub async fn insert(user: UserNew, conn: &DbConn) -> bool {
         conn.run(move |c| {
-            let res = diesel::insert_into(users::table).values(&user).execute(c);
-
-            match res {
-                Ok(_) => true,
-                Err(_) => false,
-            }
+            diesel::insert_into(users::table)
+                .values(&user)
+                .execute(c)
+                .is_ok()
         })
         .await
     }
 
-    /// Returns true if username is available.
-    pub async fn get(username: String, conn: &DbConn) -> Option<User> {
+    /// Returns user from username.
+    pub async fn get_from_username(username: String, conn: &DbConn) -> Option<User> {
         conn.run(|c| {
-            let res = all_users
+            all_users
                 .filter(user_username.eq(username))
-                .get_result::<User>(c);
-
-            match res {
-                Ok(u) => Some(u),
-                Err(_) => None,
-            }
+                .get_result::<User>(c)
+                .ok()
         })
         .await
+    }
+
+    /// Returns user from id.
+    pub async fn get_from_id(id: i32, conn: &DbConn) -> Option<User> {
+        conn.run(move |c| all_users.find(id).get_result::<User>(c).ok())
+            .await
     }
 }
 
@@ -137,16 +138,12 @@ impl Tweet {
         allow_tables_to_appear_in_same_query!(tweets, users);
 
         conn.run(move |c| {
-            let res: Result<String, _> = users::table
+            users::table
                 .inner_join(tweets::table)
                 .select(user_username)
                 .filter(tweet_author_id.eq(author_id))
-                .get_result::<String>(c);
-
-            match res {
-                Ok(username) => Some(username),
-                Err(_) => None,
-            }
+                .get_result::<String>(c)
+                .ok()
         })
         .await
     }

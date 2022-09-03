@@ -1,18 +1,19 @@
 {% extends "base" %}
 {% block nav %}
-<!-- Don't autofocus the username field -->
-<input type="text" autofocus="autofocus" style="display:none" />
 <nav class="navbar navbar-dark
 	    primary border-bottom border-2">
 
-  <form action="login" method="post" class="px-3">
+  <form action="logout" method="post" class="px-3">
     <div class="row align-items-center">
-      <div class="col-auto">
-        <input class="form-control" type="text"
-               placeholder="Enter a unique name" name="username" required autofocus />
+      <div class="col-auto h4 mb-0">
+        Logged in as
+        <a href="/users/{{ user.id }}"
+          class="text-white font-weight-bold">
+          {{ user.username }}
+        </a>
       </div>
       <div class="col-auto">
-        <button type="submit" class="btn btn-success">Login!</button>
+        <button type="submit" class="btn btn-secondary">Logout</button>
       </div>
     </div>
   </form>
