@@ -1,0 +1,58 @@
+{% extends "base" %}
+{% block content %}
+<div class="w-50 h-50 card primary">
+  <div class="card-body px-5">
+    <div class="card-title border-bottom border-2
+      d-flex justify-content-between">
+      <div class="form-group">
+        <input type="text" class="form-control" id="title" placeholder="Title">
+      </div>
+      <div class="d-flex flex-column align-items-end">
+        <a href="/" type="button" class="btn-close" aria-label="Close"></a>
+        <button class="btn btn-success" onclick="post()">Post Tweet</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <textarea class="form-control rounded-0 textbox primary" id="body"></textarea>
+    </div>
+  </div>
+</div>
+<script>
+
+  function post() {
+
+    let new_tweet = {
+      title: document.getElementById("title").value,
+      body: document.getElementById("body").value,
+      author_id: {{ user.id }},
+    }
+    
+    fetch("/post-tweet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8", },
+      body: JSON.stringify(new_tweet),
+    }).then(e => {
+      if (!e.ok) {
+        alert("Error posting tweet :(");
+      }
+    });
+  }
+  
+</script>
+{% endblock content %}
+{% block head %}
+<style>
+  .textbox {
+    height: 350px;
+    width: 100%;
+    border: none;
+    resize: none;
+    border-bottom:2px solid #333;
+  }
+
+  .textbox:focus {
+    background: #1DA1F2;
+  }
+</style>
+<title>Rust Tweet</title>
+{% endblock %}

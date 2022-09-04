@@ -1,6 +1,6 @@
 use crate::DbConn;
 use diesel::{self, prelude::*};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 mod schema {
     table! {
@@ -49,7 +49,7 @@ pub struct Tweet {
     pub author_id: i32,
 }
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize)]
 #[table_name = "tweets"]
 pub struct TweetNew {
     pub title: String,
@@ -119,18 +119,27 @@ impl Tweet {
         .await
     }
 
-    /// Inserts a tweet in the DB and returns true of insertion was successful.
-    // pub async fn insert(tweet: TweetNew, conn: &DbConn) -> bool {
-    //     conn.run(move |c| {
-    //         let res = diesel::insert_into(tweets::table).values(&tweet).execute(c);
-    //
-    //         match res {
-    //             Ok(_) => true,
-    //             Err(_) => false,
-    //         }
-    //     })
-    //     .await
-    // }
+    /// Inserts a tweet in the DB and returns the ID if insertion was successful.
+    pub async fn insert(tweet: TweetNew, conn: &DbConn) -> Option<i32> {
+        conn.run(move |c| {
+            if !diesel::insert_into(tweets::table)
+                .values(&tweet)
+                .execute(c)
+                .is_ok()
+            {
+                None
+            } else {
+                Some(
+                    tweets::table
+                        .order(tweet_id.desc())
+                        .first::<Tweet>(c)
+                        .unwrap()
+                        .id,
+                )
+            }
+        })
+        .await
+    }
 
     /// Get the username associated with the author_id if that user exists.
     pub async fn author_username(author_id: i32, conn: &DbConn) -> Option<String> {

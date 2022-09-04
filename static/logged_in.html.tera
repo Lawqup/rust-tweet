@@ -3,20 +3,27 @@
 <nav class="navbar navbar-dark
 	    primary border-bottom border-2">
 
-  <form action="logout" method="post" class="px-3">
-    <div class="row align-items-center">
-      <div class="col-auto h4 mb-0">
-        Logged in as
-        <a href="/users/{{ user.id }}"
-          class="text-white font-weight-bold">
-          {{ user.username }}
-        </a>
+  <div class="d-flex justify-content-between vw-100">
+    
+    <form action="logout" method="post" class="mx-3">
+      <div class="row align-items-center">
+        <div class="col-auto h4 mb-0">
+          Logged in as
+          <a href="/users/{{ user.id }}"
+            class="text-white font-weight-bold">
+            {{ user.username }}
+          </a>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-secondary">Logout</button>
+        </div>
       </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-secondary">Logout</button>
-      </div>
-    </div>
-  </form>
+    </form>
+    
+    <a class="btn btn-success ml-auto mx-3" href="\create-tweet">Create New Tweet!</a>
+    
+  </div>
+
 </nav>
 {% endblock%}
 {% block content %}

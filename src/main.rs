@@ -11,11 +11,11 @@ use rocket::http::{Cookie, CookieJar};
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::Redirect;
-use rocket::serde::Serialize;
+use rocket::serde::{json::Json, Serialize};
 use rocket_dyn_templates::{context, Template};
 
 mod database;
-use database::{Tweet, User, UserNew};
+use database::{Tweet, TweetNew, User, UserNew};
 
 #[database("sqlite_database")]
 pub struct DbConn(diesel::SqliteConnection);
@@ -71,6 +71,21 @@ async fn logout(cookies: &CookieJar<'_>) -> Redirect {
     Redirect::to("/")
 }
 
+#[post("/post-tweet", data = "<new_tweet>")]
+async fn post_tweet(new_tweet: Json<TweetNew>, conn: DbConn) -> Redirect {
+    let id = Tweet::insert(new_tweet.into_inner(), &conn).await;
+
+    Redirect::to(format!("/tweet/{}", id.unwrap()))
+}
+
+#[get("/create-tweet")]
+async fn create_tweet(user: Auth, conn: DbConn) -> Template {
+    Template::render(
+        "create_tweet",
+        Context::new(&conn).await.with_user(user, &conn).await,
+    )
+}
+
 #[get("/")]
 async fn logged_in(user: Auth, conn: DbConn) -> Template {
     Template::render(
@@ -88,6 +103,7 @@ async fn index(conn: DbConn) -> Template {
 #[get("/tweet/<id>")]
 async fn tweet(id: i32, conn: DbConn) -> Template {
     let tweet = Tweet::get(id, &conn).await;
+
     Template::render(
         "tweet",
         context! {
@@ -103,5 +119,16 @@ fn rocket() -> _ {
         .attach(DbConn::fairing())
         .attach(Template::fairing())
         .mount("/", FileServer::from(relative!("static")))
-        .mount("/", routes![index, tweet, login, logged_in, logout])
+        .mount(
+            "/",
+            routes![
+                index,
+                tweet,
+                login,
+                logged_in,
+                logout,
+                create_tweet,
+                post_tweet
+            ],
+        )
 }
