@@ -12,7 +12,7 @@
         <h5 class="card-subheading">{{ author }}</h5>
       </div>
     </div>
-    <h4 class="card-text pt-1">{{ tweet.body }}</h4>
+    <h4 class="card-text pt-1" style="white-space: pre-wrap;">{{ tweet.body }}</h4>
   </div>
 </div>
 {% endblock content %}

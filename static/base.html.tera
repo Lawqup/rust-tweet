@@ -29,8 +29,8 @@
     </style>
     {% block nav %}{% endblock nav%}
     <div class="container-fluid
-      d-flex justify-content-center align-items-center
-      vh-100 pt-2">
+		d-flex justify-content-center align-items-center mt-4"
+	 style="height: 90vh">
       {% block content %}{% endblock content %}
     </div>
     <script

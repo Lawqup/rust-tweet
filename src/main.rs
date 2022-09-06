@@ -11,7 +11,7 @@ use rocket::http::{Cookie, CookieJar};
 use rocket::outcome::IntoOutcome;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::Redirect;
-use rocket::serde::{json::Json, Serialize};
+use rocket::serde::Serialize;
 use rocket_dyn_templates::{context, Template};
 
 mod database;
@@ -72,7 +72,7 @@ async fn logout(cookies: &CookieJar<'_>) -> Redirect {
 }
 
 #[post("/post-tweet", data = "<new_tweet>")]
-async fn post_tweet(new_tweet: Json<TweetNew>, conn: DbConn) -> Redirect {
+async fn post_tweet(new_tweet: Form<TweetNew>, conn: DbConn) -> Redirect {
     let id = Tweet::insert(new_tweet.into_inner(), &conn).await;
 
     Redirect::to(format!("/tweet/{}", id.unwrap()))
@@ -122,13 +122,13 @@ fn rocket() -> _ {
         .mount(
             "/",
             routes![
+                post_tweet,
                 index,
                 tweet,
                 login,
                 logged_in,
                 logout,
                 create_tweet,
-                post_tweet
             ],
         )
 }

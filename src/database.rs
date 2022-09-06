@@ -1,6 +1,6 @@
 use crate::DbConn;
 use diesel::{self, prelude::*};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 mod schema {
     table! {
@@ -49,7 +49,7 @@ pub struct Tweet {
     pub author_id: i32,
 }
 
-#[derive(Insertable, Deserialize)]
+#[derive(Insertable, FromForm)]
 #[table_name = "tweets"]
 pub struct TweetNew {
     pub title: String,

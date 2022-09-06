@@ -21,7 +21,7 @@
 {% block content %}
 <div
   class="w-50 h-100
-	 bg-secondary">
+	 bg-secondary overflow-auto">
   <div class="list-group list-group-flush b-5">
     {% for tweet in tweets %}
     <a href="/tweet/{{ tweet.id }}"
