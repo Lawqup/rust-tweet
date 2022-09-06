@@ -102,7 +102,8 @@ impl User {
 impl Tweet {
     /// Returns all tweets in the database.
     pub async fn all(conn: &DbConn) -> Vec<Tweet> {
-        conn.run(|c| all_tweets.load::<Tweet>(c).unwrap()).await
+        conn.run(|c| all_tweets.order(tweet_id.desc()).load::<Tweet>(c).unwrap())
+            .await
     }
 
     /// Returns a tweet associated with the id.
